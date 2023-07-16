@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
 const csv = require('@fast-csv/format');
-
 class CSVFile {
     static write(filestream, rows, options) {
         return new Promise((res, rej) => {
