@@ -4,7 +4,8 @@ const {default: axios} = require("axios");
 const {csvCreator} = require("./CSVFileWriter");
 const {province, municipality, firstURL, mainURL} = require("./Script1");
 const filename = `Script3.csv`
-const {axiosInstance} = require("./Script2")
+const {axiosInstance} = require("./AxiosInstance");
+const {axiosPromiseCreator} = require("./")
 //list of endpoints
 const endPoints = [
     `${mainURL}?parentOption=${province}&childOption=${municipality}`,
@@ -23,16 +24,8 @@ async function asyncGetBarangay(){
         // creates the CSV file
         res =>{
             console.log(`attempt to get data from the ${endPoints.length} API endpoints is successful`)
-            if(res && res.length > 0){
-                if(res[0].data && res[1].data){
-                    csvCreator(res[0].data, res[1].data, filename, province, municipality)
-                        .then(()=>{
-                            console.log("Process executed successfully")
-                        })
-                        .catch(() =>{
-                            console.log("creation of CSV encountered an error")
-                        })
-                }
+            if(res){
+                csvCreator(res[0], res[1], filename, province, municipality)
             }
         }
     ).catch(
