@@ -1,12 +1,8 @@
-// imported modules
-const axios = require("axios")
-// custom scripts
+
 const {axiosInstance} = require("./AxiosInstance")
-const {firstURL, mainURL, province} = require("./Script1")
-const {writeToCSV, csvCreator} = require("./CSVFileWriter")
-const url = require("url");
+const {firstURL, mainURL} = require("./Script1")
+const {writeToCSV} = require("./CSVFileWriter")
 const {axiosPromiseCreator} = require("./Script2")
-const {all} = require("express/lib/application");
 // program related constants
 const filename ="FirstStretch.csv"
 
@@ -114,4 +110,4 @@ async function getEachBarangay(arrayParam, province){
     return result
 }
 
-module.exports ={getEachBarangay, barangayInProvinceGetter, firstStretch}
+module.exports ={getEachBarangay, firstStretch}
