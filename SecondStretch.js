@@ -1,31 +1,38 @@
 const { axiosInstance } = require("./Script2")
 const axios = require("axios")
-const { firstURL, mainURL } = require("./Script1")
-const { getProvinceList, getEachBarangay } = require("./FirstStretch")
-const { writeToCSV } = require("./CSVFileWriter");
+const { firstURL, mainURL, province} = require("./Script1")
+const { barangayInProvinceGetter } = require("./FirstStretch")
+const { writeToCSV, csvCreator} = require("./CSVFileWriter");
 const filename = `SecondStrech.csv`;
+const {axiosPromiseCreator} = require("./Script2")
 
-async function getAllBarangay() {
-    getProvinceList(firstURL).then(resp => {
-                if (resp.data && resp.data.data) {
-                    if (resp.data.data["childOptions"]) {
-                        const endPointList = []
-                        let childOptions = resp.data.data["childOptions"]
-                        for (key in childOptions) {
-                            for (innerKey in childOptions[`${key}`]) {
-                                endPointList.push({
-                                            "province": `${key}`,
-                                            "municipality": `${childOptions[`${key}`][innerKey]}`,
-                            "url": `${mainURL}?parentOption=${key}&childOption=${childOptions[`${key}`][innerKey]}`.replace(" ", "%20"),
-                        })
-                    }
-                }
-                executePromises(endPointList)
-
+async function SecondStretch(){
+    const provinces = await axiosPromiseCreator(firstURL).then(res =>{
+        if(res && res.data &&res.data.data){
+            if(res.data.data["parentOptions"]){
+                return res.data.data["parentOptions"]
             }
         }
-    }).catch(err=>{
-        console.log(err);
+    })
+    const resultArray = []
+    const errorArray = []
+    for(key in provinces){
+        await barangayInProvinceGetter(provinces[key])
+        .then(res =>{
+            resultArray.push(...res.result);
+            errorArray.push(...res.error)
+        })
+        console.log(`finished ${provinces[key]}`);
+    }
+    await writeToCSV(resultArray, filename).then(()=>{
+        console.log("barangays saved")
+    }).catch(()=>{
+        console.log("barangays are not saved")
+    })
+    await writeToCSV(errorArray, `error${filename}`).then(()=>{
+        console.log("errors saved");
+    }).catch(()=>{
+        console.log("errors are not saved");
     })
 }
 
@@ -80,4 +87,4 @@ async function executePromises(arrayParam) {
 
 }
 
-module.exports = {getAllBarangay}
+module.exports = {SecondStretch}

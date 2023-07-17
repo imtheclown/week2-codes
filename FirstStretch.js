@@ -115,4 +115,4 @@ async function getEachBarangay(arrayParam, province){
     return result
 }
 
-module.exports ={getEachBarangay, firstStretch}
+module.exports ={barangayInProvinceGetter, firstStretch}
