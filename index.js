@@ -3,25 +3,24 @@ const express = require('express');
 const app = express();
 const port = 5000;
 // used Node Modules
-
 // custom imported modules
 // project related constants
-const url = "https://demo.myruntime.com/sustainability-run/fulfillmentClustersService/api/getPhilClusterOptions/sustainabilityRun";
-const firstURL =`https://demo.myruntime.com/website/fulfillmentClustersService/api/getPhilClusters/myruntimeWeb`
-const municipality = "Miagao";
 const province = "Iloilo";
-
 //custom query modules
+// Script1
 const {fetchBarangay} = require("./Script1")
+// Script2
 const {axiosPromise} = require("./Script2")
+// Script3
 const {asyncGetBarangay} = require("./Script3")
-const {getAllBarangay} = require("./SecondStretch");
-// first and second stretch modules
+// second stretch
+const {SecondStretch} = require("./SecondStretch");
+// first stretch
 const {firstStretch} = require("./FirstStretch")
 
 // server endpoint
 app.get('/', (req, res) => {
-    firstStretch(province);
+    SecondStretch()
 });
 
 // application listens to port
