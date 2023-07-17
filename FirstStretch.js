@@ -24,12 +24,14 @@ async function firstStretch(province){
 
 async function barangayInProvinceGetter(province){
     return new Promise((resolve, reject)=>{
+        // retrieves municipalities of a given province
         axiosPromiseCreator(firstURL).then(res =>{
             if(res && res.data){
                 if(res.data.data && res.data.data.childOptions){
+                    // stores the municipalities of a given province
                     let childOptions = res.data.data.childOptions;
                     childOptions = childOptions[`${province}`];
-
+                    // calls a function that retrieves barangays for each municipality of the province
                     const allBarangay = getEachBarangay(childOptions, province)
                     allBarangay.then(res =>{
                         const resultArray = [];
@@ -73,6 +75,7 @@ async function barangayInProvinceGetter(province){
 async function getEachBarangay(arrayParam, province){
     const result = []
     const error = []
+    // creates a promise for each combination of province and municipality
     const promiseList = arrayParam.map(endpoint =>{
         return new Promise((resolve, reject) =>{
             axiosInstance({
@@ -100,6 +103,7 @@ async function getEachBarangay(arrayParam, province){
             })
         })
     })
+    // executes and waits for each of the generated promise above
     for(promise in promiseList){
         await promiseList[promise].then(res =>{
             result.push(res)
@@ -107,6 +111,7 @@ async function getEachBarangay(arrayParam, province){
             console.log(error)
         })
     }
+    // returns the list of barangays of type object
     return result
 }
 
