@@ -1,93 +1,117 @@
 // imported modules
 const axios = require("axios")
 // custom scripts
-const {axiosInstance} = require("./Script2")
-const {firstURL, mainURL} = require("./Script1")
-const {writeToCSV} = require("./CSVFileWriter")
+const {axiosInstance} = require("./AxiosInstance")
+const {firstURL, mainURL, province} = require("./Script1")
+const {writeToCSV, csvCreator} = require("./CSVFileWriter")
 const url = require("url");
+const {axiosPromiseCreator} = require("./Script2")
+const {all} = require("express/lib/application");
 // program related constants
 const filename ="FirstStretch.csv"
 
-axios.interceptors.response.use(undefined, (err) => {
-    const { config, message } = err;
-    if (!config || !config.retry) {
-        return Promise.reject(err);
-    }
-    // retry while Network timeout or Network Error
-    if (!(message.includes("timeout") || message.includes("Network Error"))) {
-        return Promise.reject(err);
-    }
-    config.retry -= 1;
-    const delayRetryRequest = new Promise((resolve) => {
-        setTimeout(() => {
-            console.log("retry the request", config.url);
-            resolve();
-        }, config.retryDelay || 1000);
-    });
-    return delayRetryRequest.then(() => axios(config));
-});
-async function getProvinceList(urlParam){
-    return new Promise((resolve, reject)=>{
-        return axiosInstance({
-            method: "GET",
-            url:`${urlParam}`
-        }).then(res  =>{
-            resolve(res);
+async function firstStretch(province){
+    await barangayInProvinceGetter(province).then(res =>{
+        writeToCSV(res["result"], filename).then(()=>{
+            console.log("barangays saved successfully")
+        }).catch(err=>{
+            console.log(err)
+        })
+        writeToCSV(res["error"], `err${filename}`).then(()=>{
+            console.log("failed child and parent options are saved");
         }).catch(err =>{
-            reject(err);
+            console.log(err)
         })
     })
+
 }
+
 async function barangayInProvinceGetter(province){
-    getProvinceList(firstURL).then(res =>{
-        if(res && res.data){
-            if(res.data.data && res.data.data.childOptions){
-                let childOptions = res.data.data.childOptions;
-                childOptions = childOptions[`${province}`];
-                const allBarangay = getEachBarangay(childOptions, province)
-                allBarangay.then(resp =>{
-                    if(resp && resp.length){
-                        let commonArray =[]
-                        let tempArray = []
-                        for(key in resp){
-                            tempArray = resp[key].data.data
-                            for(innerKey in tempArray){
-                                commonArray.push({"province": province, "municipality": childOptions[key], "barangay": tempArray[innerKey]})
+    return new Promise((resolve, reject)=>{
+        axiosPromiseCreator(firstURL).then(res =>{
+            if(res && res.data){
+                if(res.data.data && res.data.data.childOptions){
+                    let childOptions = res.data.data.childOptions;
+                    childOptions = childOptions[`${province}`];
+
+                    const allBarangay = getEachBarangay(childOptions, province)
+                    allBarangay.then(res =>{
+                        const resultArray = [];
+                        const erroneousArray = []
+                        for(key in res){
+                            if(res[key].successful){
+                                for(innerKey in res[key].data){
+                                    resultArray.push({
+                                        "barangay": res[key]["data"][innerKey],
+                                        "municipality": res[key]["municipality"],
+                                        "province": province
+                                    })
+                                }
+                            }else{
+                                erroneousArray.push({
+                                    "province": province,
+                                    "municipality": res[key]["municipality"]
+                                })
                             }
                         }
-                        if(commonArray.length){
-                            writeToCSV(commonArray, filename).then(resp =>{
-                                console.log(`successfully created a file and added ${commonArray.length} rows`)
-                            }).catch(err =>{
-                                console.log("error")
-                            })
-                        }
-
-                    }
-                }).catch((err)=>{
-                    console.log(err)
-                    console.log("Not all of the requests went successfully")
-                })
-            }else{
-                console.log("may error")
+                        resolve({
+                            "result": resultArray,
+                            "error": erroneousArray
+                        })
+                    }).catch(err=>{
+                        console.log("something went wrong")
+                        reject(err)
+                    })
+                }else{
+                    console.log("may error")
+                }
             }
-        }
-    }).catch(err =>{
-        console.log(err)
-    })
-}
-
-function getEachBarangay(arrayParam, province){
-    const promiseList = arrayParam.map(mun => {
-        return axiosInstance.get(`${mainURL}?parentOption=${province}&childOption=${mun}`.replace(" ", "+"), {retry: 3, retryDelay: 3000})
-    })
-    return new Promise((resolve, reject) =>{
-        axios.all(promiseList).then(res =>{
-            resolve(res)
         }).catch(err =>{
-            reject(err)
+            console.log(err)
         })
     })
+
+
 }
 
-module.exports ={getEachBarangay, barangayInProvinceGetter, getProvinceList}
+async function getEachBarangay(arrayParam, province){
+    const result = []
+    const error = []
+    const promiseList = arrayParam.map(endpoint =>{
+        return new Promise((resolve, reject) =>{
+            axiosInstance({
+                method: "GET",
+                url: `${mainURL}?parentOption=${province}&childOption=${endpoint}`.replace(" ", "%20"),
+            }).then(res =>{
+                resolve({
+                    "data": res.data.data,
+                    "province": province,
+                    "municipality": endpoint,
+                    "successful": true
+                })
+            }).catch(err =>{
+                if(err.response){
+                    resolve({
+                        "successful": false
+                    })
+                }else if(err.response){
+                    console.log("failure")
+                    reject(err)
+                }else{
+                    console.log("failure")
+                    reject(err)
+                }
+            })
+        })
+    })
+    for(promise in promiseList){
+        await promiseList[promise].then(res =>{
+            result.push(res)
+        }).catch(() =>{
+            console.log(error)
+        })
+    }
+    return result
+}
+
+module.exports ={getEachBarangay, barangayInProvinceGetter, firstStretch}
