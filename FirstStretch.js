@@ -50,7 +50,7 @@ async function barangayInProvinceGetter(province){
                                     "province": province,
                                     "municipality": res[key]["municipality"]
                                 })
-                            }
+                            }  
                         }
                         resolve({
                             "result": resultArray,
