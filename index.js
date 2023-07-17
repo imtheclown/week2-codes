@@ -17,12 +17,11 @@ const {axiosPromise} = require("./Script2")
 const {asyncGetBarangay} = require("./Script3")
 const {getAllBarangay} = require("./SecondStretch");
 // first and second stretch modules
-const {barangayInProvinceGetter} = require("./FirstStretch")
+const {firstStretch} = require("./FirstStretch")
 
 // server endpoint
 app.get('/', (req, res) => {
-    getAllBarangay();
-    res.send('Hello-World');
+    firstStretch(province);
 });
 
 // application listens to port
