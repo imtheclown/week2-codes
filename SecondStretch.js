@@ -1,7 +1,7 @@
 const { firstURL, mainURL, province} = require("./Script1")
 const { barangayInProvinceGetter } = require("./FirstStretch")
 const { writeToCSV, csvCreator} = require("./CSVFileWriter");
-const filename = `SecondStrech.csv`;
+const filename = `SecondStretch.csv`;
 const {axiosPromiseCreator} = require("./Script2")
 
 async function SecondStretch(){
@@ -26,17 +26,16 @@ async function SecondStretch(){
         }).catch(err =>{
             console.log(err.response)
             })
-        console.log(`finished ${provinces[key]}`);
     }
     // creates CSV file of barangays
     await writeToCSV(resultArray, filename).then(()=>{
-        console.log("barangays saved")
+        console.log(`Barangays saved, added ${resultArray.length} rows`);
     }).catch(()=>{
         console.log("barangays are not saved")
     })
     // creates CSV file for province and municipality with errors
     await writeToCSV(errorArray, `error${filename}`).then(()=>{
-        console.log("errors saved");
+        console.log(`Errors saved, added ${errorArray.length} rows`);
     }).catch(()=>{
         console.log("errors are not saved");
     })

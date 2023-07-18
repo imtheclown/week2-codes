@@ -13,6 +13,7 @@ const axiosInstance = axios.create({
 });
 axios.interceptors.response.use(undefined, (err) => {
     const { config, message } = err;
+    console.log(message)
     if (!config || !config.retry) {
         return Promise.reject(err);
     }

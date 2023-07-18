@@ -40,9 +40,10 @@ async function barangayInProvinceGetter(province){
                             if(res[key].successful){
                                 for(innerKey in res[key].data){
                                     resultArray.push({
-                                        "barangay": res[key]["data"][innerKey],
+                                        "province": province,
                                         "municipality": res[key]["municipality"],
-                                        "province": province
+                                        "barangay": res[key]["data"][innerKey],
+
                                     })
                                 }
                             }else{
@@ -50,8 +51,10 @@ async function barangayInProvinceGetter(province){
                                     "province": province,
                                     "municipality": res[key]["municipality"]
                                 })
-                            }  
+                            }
+
                         }
+                        console.log(`Finished: ${province}`)
                         resolve({
                             "result": resultArray,
                             "error": erroneousArray
@@ -91,7 +94,8 @@ async function getEachBarangay(arrayParam, province){
             }).catch(err =>{
                 if(err.response){
                     resolve({
-                        "successful": false
+                        "successful": false,
+                        "municipality": endpoint
                     })
                 }else if(err.response){
                     console.log("failure")
